@@ -2,6 +2,7 @@ package io.github.mingzilla.llmclient;
 
 import java.util.function.Supplier;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -43,9 +44,9 @@ public class LlmClient {
      *                             verification fails, null if successful
      * @param inputSupplier        A supplier function that provides the
      *                             LlmClientInput
-     * @return A Mono that emits the LlmClientOutput when the request completes
+     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput when the request completes
      */
-    public Mono<LlmClientOutput> verifyAndSend(
+    public Mono<ResponseEntity<LlmClientOutput>> verifyAndSend(
             Supplier<LlmClientOutput> verificationSupplier,
             Supplier<LlmClientInput> inputSupplier) {
         LlmClientVerifier.require(verificationSupplier, "Verification supplier");
@@ -54,7 +55,9 @@ public class LlmClient {
                 .flatMap(verificationOutput -> {
                     LlmClientVerifier.require(verificationOutput, "Verification result");
                     if (!verificationOutput.isSuccessful()) {
-                        return Mono.just(verificationOutput);
+                        ResponseEntity<LlmClientOutput> resp = ResponseEntity.status(verificationOutput.statusCode())
+                                .body(verificationOutput);
+                        return Mono.just(resp);
                     }
                     return handleSend(inputSupplier);
                 });
@@ -67,9 +70,9 @@ public class LlmClient {
      * 
      * @param inputSupplier A supplier function that provides the LlmClientInput,
      *                      may contain blocking code
-     * @return A Mono that emits the LlmClientOutput when the request completes
+     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput when the request completes
      */
-    public Mono<LlmClientOutput> handleSend(Supplier<LlmClientInput> inputSupplier) {
+    public Mono<ResponseEntity<LlmClientOutput>> handleSend(Supplier<LlmClientInput> inputSupplier) {
         return Mono.fromCallable(inputSupplier::get)
                 .subscribeOn(Schedulers.boundedElastic())
                 .flatMap(this::send);
@@ -82,9 +85,9 @@ public class LlmClient {
      * Sends a request to the LLM API and returns a single non-streaming response
      * 
      * @param input The LlmClientInput containing the request details
-     * @return A Mono that emits the LlmClientOutput when the request completes
+     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput when the request completes
      */
-    private Mono<LlmClientOutput> send(LlmClientInput input) {
+    private Mono<ResponseEntity<LlmClientOutput>> send(LlmClientInput input) {
         return webClient.post()
                 .uri(input.url())
                 .bodyValue(input.body())
@@ -98,7 +101,8 @@ public class LlmClient {
                         return Mono.just(((LlmClientPreflightException) error).getOutput());
                     }
                     return Mono.just(LlmClientOutput.forError(LlmClientError.fromException(error)));
-                });
+                })
+                .map(output -> ResponseEntity.status(output.statusCode()).body(output));
     }
 
     /**

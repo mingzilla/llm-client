@@ -55,7 +55,8 @@ class LlmClientTests {
 
                 // Test the non-blocking send operation
                 StepVerifier.create(llmClient.handleSend(() -> input))
-                                .assertNext(output -> {
+                                .assertNext(resp -> {
+                                        LlmClientOutput output = resp.getBody();
                                         assertTrue(output.isSuccessful());
                                         assertEquals(200, output.statusCode());
                                         assertNotNull(output.body());
@@ -143,7 +144,8 @@ class LlmClientTests {
 
                 // Test error handling
                 StepVerifier.create(llmClient.handleSend(() -> input))
-                                .assertNext(output -> {
+                                .assertNext(resp -> {
+                                        LlmClientOutput output = resp.getBody();
                                         assertFalse(output.isSuccessful());
                                         assertNotNull(output.error());
                                         // The error code might be different now

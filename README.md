@@ -96,7 +96,7 @@ public class ChatController {
     }
     
     @PostMapping(value = "/json", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<LlmClientOutput> json(
+    public Mono<ResponseEntity<LlmClientOutput>> json(
             @RequestHeader("Authorization") String authHeader,
             @RequestBody LlmClientInputBody inputBody) {
         String clientToken = authHeader.replace("Bearer ", "");
