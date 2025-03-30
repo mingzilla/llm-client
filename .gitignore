@@ -12,3 +12,8 @@ temp/
 !gradle/wrapper/gradle-wrapper.properties
 !gradlew
 !gradlew.bat
+*.swp
+*.bak
+*.tmp
+*.orig
+.DS_Store
