@@ -3,6 +3,7 @@ build/
 .idea/
 *.iml
 bin/
+target/
 temp/
 .vscode/*
 !.vscode/settings.json
