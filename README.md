@@ -19,28 +19,17 @@ A reactive Java client for LLM (Large Language Model) APIs with streaming suppor
 ### Prerequisites
 - Java 17 or higher
 - Spring WebFlux 5.3.x
-- Gradle 7.x or higher
+- Gradle 7.x or Maven 3.x
 
-### Configure GitHub Packages Authentication
+### Using Gradle
 
-Add to your `gradle.properties`:
+1. Add GitHub authentication to `~/.gradle/gradle.properties`:
 ```properties
 gpr.user=YOUR_GITHUB_USERNAME
 gpr.key=YOUR_GITHUB_TOKEN
 ```
 
-### Maven
-
-```xml
-<dependency>
-    <groupId>io.github.mingzilla</groupId>
-    <artifactId>llm-client</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-### Gradle
-
+2. Add to your build.gradle :
 ```groovy
 repositories {
     mavenCentral()
@@ -56,6 +45,39 @@ repositories {
 dependencies {
     implementation 'io.github.mingzilla:llm-client:1.0.0'
 }
+```
+
+### Using Maven
+
+1. Add GitHub authentication to `~/.m2/settings.xml` :
+```xml
+<settings>
+    <servers>
+        <server>
+            <id>github</id>
+            <username>${github.username}</username>
+            <password>${github.token}</password>
+        </server>
+    </servers>
+</settings>
+```
+
+2. Add to your `pom.xml`:
+```xml
+<repositories>
+    <repository>
+        <id>github</id>
+        <url>https://maven.pkg.github.com/mingzilla/llm-client</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>io.github.mingzilla</groupId>
+        <artifactId>llm-client</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+</dependencies>
 ```
 
 ## Controller Example
@@ -194,3 +216,7 @@ Following the specification in [`streaming-api-spec.md`](./streaming-api-spec.md
 ## License
 
 [MIT License](LICENSE)
+
+## Author
+
+Ming Huang (mingzilla)
