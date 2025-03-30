@@ -17,3 +17,4 @@ temp/
 *.tmp
 *.orig
 .DS_Store
+combine.ps1

@@ -93,8 +93,12 @@ public class LlmClient {
                     return response.bodyToMono(String.class)
                             .map(body -> LlmClientOutput.fromResponse(response, body));
                 })
-                .onErrorResume(error -> Mono.just(
-                        LlmClientOutput.forError(LlmClientError.fromException(error))));
+                .onErrorResume(error -> {
+                    if (error instanceof LlmClientPreflightException) {
+                        return Mono.just(((LlmClientPreflightException) error).getOutput());
+                    }
+                    return Mono.just(LlmClientOutput.forError(LlmClientError.fromException(error)));
+                });
     }
 
     /**
@@ -157,7 +161,13 @@ public class LlmClient {
                 .filter(line -> !line.isEmpty())
                 .map(LlmClientJsonUtil::parseStreamChunk)
                 .takeUntil(LlmClientOutputChunk::done)
-                .onErrorResume(error -> Flux.just(LlmClientOutputChunk.forError(error.getMessage())));
+                .onErrorResume(error -> {
+                    if (error instanceof LlmClientPreflightException) {
+                        return Flux.just(LlmClientOutputChunk.forError(
+                                ((LlmClientPreflightException) error).getOutput().getFailureReason()));
+                    }
+                    return Flux.just(LlmClientOutputChunk.forError(error.getMessage()));
+                });
     }
 
     /**
@@ -234,6 +244,12 @@ public class LlmClient {
                 })
                 .takeUntil(event -> event.data() != null && "[DONE]".equals(event.data()))
                 .onErrorResume(error -> {
+                    if (error instanceof LlmClientPreflightException) {
+                        LlmClientOutput output = ((LlmClientPreflightException) error).getOutput();
+                        return Flux.just(ServerSentEvent.<LlmClientOutputChunk>builder()
+                                .data(LlmClientOutputChunk.forError(output.getFailureReason()))
+                                .build());
+                    }
                     return Flux.just(ServerSentEvent.<LlmClientOutputChunk>builder()
                             .data(LlmClientOutputChunk.forError(error.getMessage()))
                             .build());

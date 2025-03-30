@@ -148,7 +148,7 @@ public class ChatController {
 }
 ```
 
-## Request Format
+### Request Format
 
 LLM API requests use `LlmClientInputBody` with this JSON structure:
 
@@ -167,6 +167,46 @@ LLM API requests use `LlmClientInputBody` with this JSON structure:
   ],
   "stream": false,
   "temperature": 0.7
+}
+```
+
+### Early Exit Example
+
+Here's how to handle early exits in your controller using `LlmClientPreflightException`:
+
+```java
+@RestController
+@RequestMapping("/api/chat")
+public class ChatController {
+    private final LlmClient llmClient;
+    private final RateLimitService rateLimitService;
+    
+    @PostMapping(value = "/stream", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<LlmClientOutputChunk> stream(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody LlmClientInputBody inputBody) {
+        String clientToken = authHeader.replace("Bearer ", "");
+        return llmClient.verifyAndStream(
+            () -> {
+                // Early exit if rate limit exceeded
+                if (rateLimitService.isLimited(clientToken)) {
+                    throw new LlmClientPreflightException(
+                        LlmClientOutput.forError("Rate limit exceeded. Please try again later.")
+                    );
+                }
+                return LlmClientOutput.verificationSuccess();
+            },
+            () -> {
+                // Early exit if token count exceeds limit
+                if (inputBody.exceedsMaxTokens()) {
+                    throw new LlmClientPreflightException(
+                        LlmClientOutput.forError("Input exceeds maximum token limit")
+                    );
+                }
+                return LlmClientInput.chat("https://api.example.com/chat", inputBody, getHeaders());
+            }
+        );
+    }
 }
 ```
 
