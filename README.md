@@ -1,6 +1,6 @@
 # LLM Client
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.mingzilla/llm-client.svg)](https://maven-badges.herokuapp.com/maven-central/io.github.mingzilla/llm-client)
+[![GitHub Package](https://img.shields.io/github/v/release/mingzilla/llm-client)](https://github.com/mingzilla/llm-client/packages)
 [![License](https://img.shields.io/github/license/mingzilla/llm-client)](https://github.com/mingzilla/llm-client/blob/main/LICENSE)
 
 A reactive Java client for LLM (Large Language Model) APIs with streaming support, following the specification described in [`streaming-api-spec`](https://mingzilla.github.io/specification/streaming-api-spec).
@@ -16,6 +16,19 @@ A reactive Java client for LLM (Large Language Model) APIs with streaming suppor
 
 ## Installation
 
+### Prerequisites
+- Java 17 or higher
+- Spring WebFlux 5.3.x
+- Gradle 7.x or higher
+
+### Configure GitHub Packages Authentication
+
+Add to your `gradle.properties`:
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.key=YOUR_GITHUB_TOKEN
+```
+
 ### Maven
 
 ```xml
@@ -29,7 +42,20 @@ A reactive Java client for LLM (Large Language Model) APIs with streaming suppor
 ### Gradle
 
 ```groovy
-implementation 'io.github.mingzilla:llm-client:1.0.0'
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/mingzilla/llm-client")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+            password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
+}
+
+dependencies {
+    implementation 'io.github.mingzilla:llm-client:1.0.0'
+}
 ```
 
 ## Controller Example
