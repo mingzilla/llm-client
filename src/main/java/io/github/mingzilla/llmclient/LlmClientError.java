@@ -1,5 +1,10 @@
 package io.github.mingzilla.llmclient;
 
+import java.net.ConnectException;
+import java.util.concurrent.TimeoutException;
+
+import org.springframework.web.reactive.function.client.WebClientResponseException.TooManyRequests;
+
 /**
  * Error representation for LLM API errors
  * Follows the error structure defined in the API specification
@@ -21,10 +26,30 @@ public record LlmClientError(String message, String type, String code, Throwable
      * @return A new LlmClientError with appropriate message, type and code
      */
     public static LlmClientError fromException(Throwable throwable) {
-        return new LlmClientError(
-                throwable.getMessage(),
-                throwable.getClass().getSimpleName(),
-                "INTERNAL_ERROR", throwable);
+        if (throwable instanceof ConnectException) {
+            return new LlmClientError(
+                    "Failed to connect to LLM service",
+                    "ConnectionError",
+                    "HTTP_503",
+                    throwable);
+        } else if (throwable instanceof TimeoutException) {
+            return new LlmClientError(
+                    "Request timed out",
+                    "TimeoutError",
+                    "HTTP_504",
+                    throwable);
+        } else if (throwable instanceof TooManyRequests) {
+            return new LlmClientError(
+                    "Rate limit exceeded",
+                    "RateLimitError",
+                    "HTTP_429",
+                    throwable);
+        } else {
+            return new LlmClientError(
+                    throwable.getMessage(),
+                    throwable.getClass().getSimpleName(),
+                    "INTERNAL_ERROR", throwable);
+        }
     }
 
     /**
