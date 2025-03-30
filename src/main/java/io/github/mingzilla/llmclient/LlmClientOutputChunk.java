@@ -4,7 +4,8 @@ package io.github.mingzilla.llmclient;
  * Represents a chunk of response from the streaming API
  * Corresponds to a single piece of a streamed response
  */
-public record LlmClientOutputChunk(LlmClientMessage message, boolean done, int index) {
+public record LlmClientOutputChunk(LlmClientMessage message, boolean done, int index,
+        LlmClientError error) {
     /**
      * Parses a JSON string into an LlmClientOutputChunk
      * 
@@ -18,13 +19,13 @@ public record LlmClientOutputChunk(LlmClientMessage message, boolean done, int i
     /**
      * Creates an error chunk with the given message
      * 
-     * @param message The error message
+     * @param error The error
      * @return A new LlmClientOutputChunk representing an error
      */
-    public static LlmClientOutputChunk forError(String message) {
+    public static LlmClientOutputChunk forError(LlmClientError error) {
         return new LlmClientOutputChunk(
-            LlmClientMessage.assistant(message),
-            true,
-            -1);
+                LlmClientMessage.assistant(error.message()),
+                true,
+                -1, error);
     }
 }

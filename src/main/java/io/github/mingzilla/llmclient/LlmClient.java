@@ -120,7 +120,7 @@ public class LlmClient {
                 .flatMapMany(verificationOutput -> {
                     LlmClientVerifier.require(verificationOutput, "Verification result");
                     if (!verificationOutput.isSuccessful()) {
-                        return Flux.just(LlmClientOutputChunk.forError(verificationOutput.getFailureReason()));
+                        return Flux.just(LlmClientOutputChunk.forError(verificationOutput.error()));
                     }
                     return handleStream(inputSupplier);
                 });
@@ -164,9 +164,9 @@ public class LlmClient {
                 .onErrorResume(error -> {
                     if (error instanceof LlmClientPreflightException) {
                         return Flux.just(LlmClientOutputChunk.forError(
-                                ((LlmClientPreflightException) error).getOutput().getFailureReason()));
+                                ((LlmClientPreflightException) error).getOutput().error()));
                     }
-                    return Flux.just(LlmClientOutputChunk.forError(error.getMessage()));
+                    return Flux.just(LlmClientOutputChunk.forError(LlmClientError.fromException(error)));
                 });
     }
 
@@ -190,7 +190,7 @@ public class LlmClient {
                     LlmClientVerifier.require(verificationOutput, "Verification result");
                     if (!verificationOutput.isSuccessful()) {
                         return Flux.just(ServerSentEvent.builder()
-                                .data(LlmClientOutputChunk.forError(verificationOutput.getFailureReason()))
+                                .data(LlmClientOutputChunk.forError(verificationOutput.error()))
                                 .build());
                     }
                     return handleStreamSse(inputSupplier);
@@ -247,11 +247,11 @@ public class LlmClient {
                     if (error instanceof LlmClientPreflightException) {
                         LlmClientOutput output = ((LlmClientPreflightException) error).getOutput();
                         return Flux.just(ServerSentEvent.<LlmClientOutputChunk>builder()
-                                .data(LlmClientOutputChunk.forError(output.getFailureReason()))
+                                .data(LlmClientOutputChunk.forError(output.error()))
                                 .build());
                     }
                     return Flux.just(ServerSentEvent.<LlmClientOutputChunk>builder()
-                            .data(LlmClientOutputChunk.forError(error.getMessage()))
+                            .data(LlmClientOutputChunk.forError(LlmClientError.fromException(error)))
                             .build());
                 });
     }
