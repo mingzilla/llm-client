@@ -12,24 +12,6 @@ public record LlmClientOutput(int statusCode, Map<String, String> headers,
         String body, LlmClientError error, LlmClientMessage message) {
 
     /**
-     * Determines if the request was successful
-     * 
-     * @return true if successful, false otherwise
-     */
-    public boolean isSuccessful() {
-        return error == null;
-    }
-
-    /**
-     * Gets the failure reason if the request failed
-     * 
-     * @return The error message or null if successful
-     */
-    public String getFailureReason() {
-        return error != null ? error.message() : null;
-    }
-
-    /**
      * Gets a specific header value
      * 
      * @param name The header name
@@ -65,26 +47,21 @@ public record LlmClientOutput(int statusCode, Map<String, String> headers,
     }
 
     /**
-     * Creates an output object representing successful verification
+     * Determines if the request was successful
      * 
-     * @return A new LlmClientOutput indicating verification success
+     * @return true if successful, false otherwise
      */
-    public static LlmClientOutput verificationSuccess() {
-        return new LlmClientOutput(200, Map.of(), null, null, null);
+    public boolean isSuccessful() {
+        return error == null;
     }
 
     /**
-     * Creates an output object for an error
+     * Gets the failure reason if the request failed
      * 
-     * @param error The LlmClientError, must not be null
-     * @return A new LlmClientOutput with the error set
-     * @throws IllegalArgumentException if error is null
+     * @return The error message or null if successful
      */
-    public static LlmClientOutput forError(LlmClientError error) {
-        if (error == null) {
-            throw new IllegalArgumentException("Error must not be null");
-        }
-        return new LlmClientOutput(500, Map.of(), null, error, null);
+    public String getFailureReason() {
+        return error != null ? error.message() : null;
     }
 
     /**
@@ -104,6 +81,15 @@ public record LlmClientOutput(int statusCode, Map<String, String> headers,
     }
 
     /**
+     * Creates an output object representing successful verification
+     * 
+     * @return A new LlmClientOutput indicating verification success
+     */
+    public static LlmClientOutput forSuccessVerification() {
+        return new LlmClientOutput(200, Map.of(), null, null, null);
+    }
+
+    /**
      * Creates a response from a WebClient response
      * 
      * @param response The WebClient response
@@ -119,6 +105,20 @@ public record LlmClientOutput(int statusCode, Map<String, String> headers,
                     body,
                     LlmClientJsonUtil.extractErrorCode(body)));
         }
+    }
+
+    /**
+     * Creates an output object for an error
+     * 
+     * @param error The LlmClientError, must not be null
+     * @return A new LlmClientOutput with the error set
+     * @throws IllegalArgumentException if error is null
+     */
+    public static LlmClientOutput forError(LlmClientError error) {
+        if (error == null) {
+            throw new IllegalArgumentException("Error must not be null");
+        }
+        return new LlmClientOutput(500, Map.of(), null, error, null);
     }
 
     /**

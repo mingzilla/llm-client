@@ -3,18 +3,17 @@ package io.github.mingzilla.llmclient;
 /**
  * Error representation for LLM API errors
  * Follows the error structure defined in the API specification
+ * 
+ * @param code Provider-specific error code from LLM response.
+ *             Examples:
+ *             - OpenAI: "context_length_exceeded", "rate_limit_exceeded"
+ *             - Anthropic: "overloaded_error", "invalid_request_error"
+ *             For internal errors: "INTERNAL_ERROR"
+ *             For HTTP transport errors without LLM error code: "HTTP_" +
+ *             statusCode
  */
-public record LlmClientError(String message, String type,
-        /**
-         * Provider-specific error code from LLM response.
-         * Examples:
-         * - OpenAI: "context_length_exceeded", "rate_limit_exceeded"
-         * - Anthropic: "overloaded_error", "invalid_request_error"
-         * For internal errors: "INTERNAL_ERROR"
-         * For HTTP transport errors without LLM error code: "HTTP_" + statusCode
-         */
-        String code,
-        Throwable cause) {
+public record LlmClientError(String message, String type, String code, Throwable cause) {
+
     /**
      * Creates an error from an exception
      * 
@@ -28,13 +27,6 @@ public record LlmClientError(String message, String type,
                 "INTERNAL_ERROR", throwable);
     }
 
-    /**
-     * Creates an error from a response status and message
-     * 
-     * @param statusCode The HTTP status code
-     * @param message    The error message
-     * @return A new LlmClientError with appropriate type and code
-     */
     /**
      * Creates an error from a response status, message, and provider-specific error
      * code
