@@ -6,6 +6,11 @@ package io.github.mingzilla.llmclient;
  * such as input validation, resource checks, rate limiting, etc.
  */
 public class LlmClientPreflightException extends RuntimeException {
+    /**
+     * The LlmClientOutput containing the failure details.
+     * This output will be returned to the client when the exception is caught,
+     * maintaining consistent error reporting throughout the application.
+     */
     private final LlmClientOutput output;
 
     /**
