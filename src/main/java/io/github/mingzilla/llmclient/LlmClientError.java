@@ -13,7 +13,8 @@ public record LlmClientError(String message, String type,
          * For internal errors: "INTERNAL_ERROR"
          * For HTTP transport errors without LLM error code: "HTTP_" + statusCode
          */
-        String code) {
+        String code,
+        Throwable cause) {
     /**
      * Creates an error from an exception
      * 
@@ -24,7 +25,7 @@ public record LlmClientError(String message, String type,
         return new LlmClientError(
                 throwable.getMessage(),
                 throwable.getClass().getSimpleName(),
-                "INTERNAL_ERROR");
+                "INTERNAL_ERROR", throwable);
     }
 
     /**
@@ -47,7 +48,7 @@ public record LlmClientError(String message, String type,
         return new LlmClientError(
                 message,
                 "ApiError",
-                providerCode != null ? providerCode : "HTTP_" + statusCode);
+                providerCode != null ? providerCode : "HTTP_" + statusCode, null);
     }
 
     /**
@@ -59,6 +60,6 @@ public record LlmClientError(String message, String type,
         return new LlmClientError(
                 "Unauthorized access",
                 "AuthenticationError",
-                "HTTP_401");
+                "HTTP_401", null);
     }
 }
