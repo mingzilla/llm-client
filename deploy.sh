@@ -1,6 +1,7 @@
 #!/bin/bash
 
-version="1.0.0"
+# Read version from build.gradle
+version=$(grep "version = '" build.gradle | sed "s/version = '\(.*\)'/\1/")
 
 echo -e "\033[32mStarting deployment process for version $version...\033[0m"
 
@@ -11,8 +12,8 @@ git tag -a "v$version" -m "Release version $version"
 git push origin main
 git push origin "v$version"
 
-# Maven deployment
-echo -e "\033[33mRunning Maven deploy...\033[0m"
-mvn clean deploy -P ossrh -DskipTests
+# Gradle deployment
+echo -e "\033[33mRunning Gradle publish...\033[0m"
+./gradlew publish -x test
 
 echo -e "\033[32mDeployment process completed!\033[0m"

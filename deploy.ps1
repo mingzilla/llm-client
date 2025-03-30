@@ -1,4 +1,5 @@
-$version = "1.0.0"
+# Read version from build.gradle
+$version = Select-String -Path ".\build.gradle" -Pattern "version = '([^']+)'" | ForEach-Object { $_.Matches.Groups[1].Value }
 
 Write-Host "Starting deployment process for version $version..." -ForegroundColor Green
 
@@ -9,8 +10,8 @@ git tag -a "v$version" -m "Release version $version"
 git push origin main
 git push origin "v$version"
 
-# Maven deployment
-Write-Host "Running Maven deploy..." -ForegroundColor Yellow
-mvn clean deploy -P ossrh -DskipTests
+# Gradle deployment
+Write-Host "Running Gradle publish..." -ForegroundColor Yellow
+.\gradlew.bat publish -x test
 
 Write-Host "Deployment process completed!" -ForegroundColor Green

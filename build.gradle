@@ -1,12 +1,12 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
     id 'idea'
 }
 
 group = 'io.github.mingzilla'
-version = '0.1.0'
-sourceCompatibility = '17'
+version = '1.0.0-SNAPSHOT'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -17,18 +17,6 @@ java {
 
 repositories {
     mavenCentral()
-}
-
-dependencies {
-    implementation 'org.springframework:spring-webflux:5.3.27'
-    implementation 'io.projectreactor.netty:reactor-netty-http:1.0.30'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
-    implementation 'io.projectreactor:reactor-core:3.5.6'
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.9.2'
-    testImplementation 'io.projectreactor:reactor-test:3.5.6'
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
 }
 
 sourceSets {
@@ -44,11 +32,20 @@ sourceSets {
     }
 }
 
+dependencies {
+    implementation 'org.springframework:spring-webflux:5.3.27'
+    implementation 'io.projectreactor.netty:reactor-netty-http:1.0.30'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
+    implementation 'io.projectreactor:reactor-core:3.5.6'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.9.2'
+    testImplementation 'io.projectreactor:reactor-test:3.5.6'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+}
+
 tasks.withType(Javadoc) {
-    // Suppress all Javadoc warnings
-    // options.addBooleanOption('Xdoclint:none', true)
-    // options.addBooleanOption('quiet', true)
-    failOnError = false // Ensure warnings do not fail the build
+    failOnError = false
 }
 
 test {
@@ -59,6 +56,72 @@ publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            
+            // Add this to ensure POM generation
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('packaging', 'jar')
+            }
+            
+            pom {
+                name = 'LLM Client'
+                description = 'A reactive Java client for LLM APIs with streaming support'
+                url = 'https://github.com/mingzilla/llm-client'
+                
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'http://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+                
+                developers {
+                    developer {
+                        name = 'Ming Huang'
+                        email = 'means789@gmail.com'
+                        organization = 'Mingzilla Studio'
+                        organizationUrl = 'https://github.com/mingzilla'
+                    }
+                }
+                
+                scm {
+                    connection = 'scm:git:git://github.com/mingzilla/llm-client.git'
+                    developerConnection = 'scm:git:ssh://github.com:mingzilla/llm-client.git'
+                    url = 'https://github.com/mingzilla/llm-client/tree/main'
+                }
+            }
         }
+    }
+    
+    repositories {
+        maven {
+            name = 'OSSRH'
+            def releasesRepoUrl = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+            def snapshotsRepoUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            
+            credentials {
+                username = project.findProperty('ossrhUsername') ?: System.getenv('OSSRH_USERNAME')
+                password = project.findProperty('ossrhPassword') ?: System.getenv('OSSRH_PASSWORD')
+            }
+        }
+    }
+}
+
+signing {
+    useGpgCmd()
+    sign publishing.publications.mavenJava
+}
+
+// Add this at the end of the file
+tasks.withType(PublishToMavenRepository) {
+    dependsOn tasks.withType(Sign)
+}
+
+// Add this after the other tasks
+task printOssrhCredentials {
+    doLast {
+        println "OSSRH Username: ${project.findProperty('ossrhUsername')}"
+        println "OSSRH Password: ${project.findProperty('ossrhPassword')}"
     }
 }

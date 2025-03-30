@@ -29,8 +29,10 @@ public class LlmClientJsonUtil {
     }
 
     /**
-     * Parses a JSON string into a specific structure defined by a TypeReference
-     * e.g. new TypeReference<Map<String, List>>() {}) returns a Map<String, List>
+     * Convert JSON string to object using TypeReference
+     * e.g. {@code new TypeReference<Map<String, List>>() {}}
+     * returns a {@code Map<String, List>}
+     * returns a Map&lt;String, List&gt;
      * 
      * @param <T>           The type to parse the JSON into
      * @param json          The JSON string to parse
@@ -90,24 +92,29 @@ public class LlmClientJsonUtil {
      * @return The provider error code or null if not found
      */
     public static String extractErrorCode(String errorBody) {
-        if (errorBody == null || errorBody.isEmpty()) return null;
+        if (errorBody == null || errorBody.isEmpty())
+            return null;
 
         try {
             Map<String, Object> errorMap = fromJsonToStructure(errorBody, new TypeReference<Map<String, Object>>() {
             });
-            if (errorMap == null) return null;
+            if (errorMap == null)
+                return null;
 
             Object code = errorMap.get("code"); // Try direct code field
-            if (code instanceof String) return (String) code;
+            if (code instanceof String)
+                return (String) code;
 
             Object error = errorMap.get("error"); // Try nested error object (OpenAI style)
             if (error instanceof Map) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> errorObj = (Map<String, Object>) error;
                 code = errorObj.get("code");
-                if (code instanceof String) return (String) code;
+                if (code instanceof String)
+                    return (String) code;
                 code = errorObj.get("type"); // Some providers use 'type' instead of 'code'
-                if (code instanceof String) return (String) code;
+                if (code instanceof String)
+                    return (String) code;
             }
         } catch (Exception ignore) {
             // Ignore parsing errors
