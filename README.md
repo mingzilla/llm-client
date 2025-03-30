@@ -191,7 +191,12 @@ public class ChatController {
                 // Early exit if rate limit exceeded
                 if (rateLimitService.isLimited(clientToken)) {
                     throw new LlmClientPreflightException(
-                        LlmClientOutput.forError("Rate limit exceeded. Please try again later.")
+                        LlmClientOutput.forError(new LlmClientError(
+                            "Rate limit exceeded. Please try again later.",
+                            "RateLimitError",
+                            "RATE_LIMIT_EXCEEDED",
+                            null
+                        ))
                     );
                 }
                 return LlmClientOutput.verificationSuccess();
@@ -200,7 +205,12 @@ public class ChatController {
                 // Early exit if token count exceeds limit
                 if (inputBody.exceedsMaxTokens()) {
                     throw new LlmClientPreflightException(
-                        LlmClientOutput.forError("Input exceeds maximum token limit")
+                        LlmClientOutput.forError(new LlmClientError(
+                            "Input exceeds maximum token limit",
+                            "ValidationError",
+                            "TOKEN_LIMIT_EXCEEDED",
+                            null
+                        ))
                     );
                 }
                 return LlmClientInput.chat("https://api.example.com/chat", inputBody, getHeaders());
