@@ -28,7 +28,7 @@ class LlmClientTests {
                 mockWebServer.start();
                 baseUrl = mockWebServer.url("/").toString();
                 WebClient webClient = WebClient.builder().build();
-                llmClient = new LlmClient(webClient);
+                llmClient = LlmClient.createWithWebClient(webClient);
         }
 
         @AfterEach

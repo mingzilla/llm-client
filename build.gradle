@@ -17,6 +17,10 @@ java {
 
 repositories {
     mavenCentral()
+    // Add Spring milestone repository for Spring AI
+    maven { url 'https://repo.spring.io/milestone' }
+    // Add snapshot repository
+    maven { url 'https://repo.spring.io/snapshot' }
 }
 
 sourceSets {
@@ -32,16 +36,30 @@ sourceSets {
     }
 }
 
+ext {
+    springAiVersion = '1.0.0-M6'
+}
+
 dependencies {
+    // Existing dependencies
     implementation 'org.springframework:spring-webflux:5.3.27'
     implementation 'io.projectreactor.netty:reactor-netty-http:1.0.30'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
     implementation 'io.projectreactor:reactor-core:3.5.6'
-
+    
+    // Spring AI dependencies (marked as optional so they're not transitive)
+    compileOnly "org.springframework.ai:spring-ai-core:${springAiVersion}"
+    compileOnly "org.springframework.ai:spring-ai-openai-spring-boot-starter:${springAiVersion}"
+    
+    // Testing dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.9.2'
     testImplementation 'io.projectreactor:reactor-test:3.5.6'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+    
+    // Spring AI test dependencies
+    testImplementation "org.springframework.ai:spring-ai-core:${springAiVersion}"
+    testImplementation "org.springframework.ai:spring-ai-openai-spring-boot-starter:${springAiVersion}"
 }
 
 tasks.withType(Javadoc) {
@@ -114,6 +132,7 @@ signing {
 tasks.withType(PublishToMavenRepository) {
     dependsOn tasks.withType(Sign)
 }
+
 // Add this anywhere in your build.gradle
 task printGithubCredentials {
     doLast {

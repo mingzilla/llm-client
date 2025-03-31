@@ -28,4 +28,22 @@ public record LlmClientOutputChunk(LlmClientMessage message, boolean done, int i
                 true,
                 -1, error);
     }
+
+    /**
+     * Creates a response chunk from a Spring AI ChatResponse
+     * 
+     * @param content Chat response content
+     * @param index   The chunk index
+     * @return A new LlmClientOutputChunk instance
+     */
+    public static LlmClientOutputChunk fromResponse(String content, int index) {
+        LlmClientMessage message = LlmClientMessage.assistant(content);
+        boolean isLastChunk = index > 0 && content.trim().isEmpty();
+
+        return new LlmClientOutputChunk(
+                message,
+                isLastChunk,
+                index,
+                null);
+    }
 }

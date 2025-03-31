@@ -2,6 +2,7 @@ package io.github.mingzilla.llmclient;
 
 import java.util.function.Supplier;
 
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -12,28 +13,39 @@ import reactor.core.scheduler.Schedulers;
 
 /**
  * Main client class for LLM operations
- * Handles all communication with the LLM API
+ * Handles all communication with the LLM API using a provider implementation
  */
 public class LlmClient {
-    private final WebClient webClient;
+    private final LlmClientProvider provider;
 
     /**
-     * Creates a new LlmClient with the specified WebClient
+     * Creates a new LlmClient with the specified provider
      * 
-     * @param webClient The WebClient to use for HTTP requests
+     * @param provider The LlmClientProvider to use for API requests
      */
-    public LlmClient(WebClient webClient) {
-        this.webClient = webClient;
+    public LlmClient(LlmClientProvider provider) {
+        this.provider = provider;
     }
 
     /**
-     * Creates a new LlmClient with a custom WebClient
+     * Creates a new LlmClient with a WebClient provider
      * 
      * @param webClient The WebClient to use
-     * @return A new LlmClient
+     * @return A new LlmClient with a WebClientLlmProvider
      */
-    public static LlmClient create(WebClient webClient) {
-        return new LlmClient(webClient);
+    public static LlmClient createWithWebClient(WebClient webClient) {
+        return new LlmClient(new WebClientLlmProvider(webClient));
+    }
+
+    /**
+     * Creates a new LlmClient with a Spring AI provider
+     * 
+     * @param chatClient The ChatClient to use for both streaming and non-streaming
+     *                   requests
+     * @return A new LlmClient with a SpringAiLlmProvider
+     */
+    public static LlmClient createWithSpringAi(ChatClient chatClient) {
+        return new LlmClient(new SpringAiLlmProvider(chatClient));
     }
 
     /**
@@ -44,7 +56,8 @@ public class LlmClient {
      *                             verification fails, null if successful
      * @param inputSupplier        A supplier function that provides the
      *                             LlmClientInput
-     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput when the request completes
+     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput
+     *         when the request completes
      */
     public Mono<ResponseEntity<LlmClientOutput>> verifyAndSend(
             Supplier<LlmClientOutput> verificationSupplier,
@@ -70,39 +83,13 @@ public class LlmClient {
      * 
      * @param inputSupplier A supplier function that provides the LlmClientInput,
      *                      may contain blocking code
-     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput when the request completes
+     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput
+     *         when the request completes
      */
     public Mono<ResponseEntity<LlmClientOutput>> handleSend(Supplier<LlmClientInput> inputSupplier) {
         return Mono.fromCallable(inputSupplier::get)
                 .subscribeOn(Schedulers.boundedElastic())
-                .flatMap(this::send);
-    }
-
-    /**
-     * IMPORTANT: Do not use this method directly. Use handleSend() instead
-     * to ensure proper handling of potentially blocking preparation code.
-     * 
-     * Sends a request to the LLM API and returns a single non-streaming response
-     * 
-     * @param input The LlmClientInput containing the request details
-     * @return A Mono that emits a ResponseEntity containing the LlmClientOutput when the request completes
-     */
-    private Mono<ResponseEntity<LlmClientOutput>> send(LlmClientInput input) {
-        return webClient.post()
-                .uri(input.url())
-                .bodyValue(input.body())
-                .headers(input::setHeaders)
-                .exchangeToMono(response -> {
-                    return response.bodyToMono(String.class)
-                            .map(body -> LlmClientOutput.fromResponse(response, body));
-                })
-                .onErrorResume(error -> {
-                    if (error instanceof LlmClientPreflightException) {
-                        return Mono.just(((LlmClientPreflightException) error).getOutput());
-                    }
-                    return Mono.just(LlmClientOutput.forError(LlmClientError.fromException(error)));
-                })
-                .map(output -> ResponseEntity.status(output.statusCode()).body(output));
+                .flatMap(provider::send);
     }
 
     /**
@@ -143,35 +130,7 @@ public class LlmClient {
     public Flux<LlmClientOutputChunk> handleStream(Supplier<LlmClientInput> inputSupplier) {
         return Mono.fromCallable(inputSupplier::get)
                 .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(this::stream);
-    }
-
-    /**
-     * IMPORTANT: Do not use this method directly. Use handleStream() instead
-     * to ensure proper handling of potentially blocking preparation code.
-     * 
-     * Streams a request to the LLM API with JSON streaming format
-     * 
-     * @param input The LlmClientInput containing the request details
-     * @return A Flux that emits each chunk from the streaming response
-     */
-    private Flux<LlmClientOutputChunk> stream(LlmClientInput input) {
-        return webClient.post()
-                .uri(input.url())
-                .bodyValue(input.body())
-                .headers(input::setHeaders)
-                .retrieve()
-                .bodyToFlux(String.class)
-                .filter(line -> !line.isEmpty())
-                .map(LlmClientJsonUtil::parseStreamChunk)
-                .takeUntil(LlmClientOutputChunk::done)
-                .onErrorResume(error -> {
-                    if (error instanceof LlmClientPreflightException) {
-                        return Flux.just(LlmClientOutputChunk.forError(
-                                ((LlmClientPreflightException) error).getOutput().error()));
-                    }
-                    return Flux.just(LlmClientOutputChunk.forError(LlmClientError.fromException(error)));
-                });
+                .flatMapMany(provider::stream);
     }
 
     /**
@@ -214,49 +173,6 @@ public class LlmClient {
     public Flux<ServerSentEvent<?>> handleStreamSse(Supplier<LlmClientInput> inputSupplier) {
         return Mono.fromCallable(inputSupplier::get)
                 .subscribeOn(Schedulers.boundedElastic())
-                .flatMapMany(this::streamSse);
-    }
-
-    /**
-     * IMPORTANT: Do not use this method directly. Use handleStreamSse() instead
-     * to ensure proper handling of potentially blocking preparation code.
-     * 
-     * Streams a request to the LLM API with SSE streaming format
-     * 
-     * @param input The LlmClientInput containing the request details
-     * @return A Flux that emits each SSE event from the streaming response
-     */
-    private Flux<ServerSentEvent<?>> streamSse(LlmClientInput input) {
-        return webClient.post()
-                .uri(input.url())
-                .bodyValue(input.body())
-                .headers(input::setHeaders)
-                .retrieve()
-                .bodyToFlux(String.class)
-                .filter(line -> !line.isEmpty())
-                .map(line -> {
-                    String data = line.startsWith("data: ") ? line.substring(6) : line;
-                    if ("[DONE]".equals(data)) {
-                        return ServerSentEvent.<String>builder()
-                                .data("[DONE]")
-                                .build();
-                    } else {
-                        return ServerSentEvent.<LlmClientOutputChunk>builder()
-                                .data(LlmClientJsonUtil.parseStreamChunk(data))
-                                .build();
-                    }
-                })
-                .takeUntil(event -> event.data() != null && "[DONE]".equals(event.data()))
-                .onErrorResume(error -> {
-                    if (error instanceof LlmClientPreflightException) {
-                        LlmClientOutput output = ((LlmClientPreflightException) error).getOutput();
-                        return Flux.just(ServerSentEvent.<LlmClientOutputChunk>builder()
-                                .data(LlmClientOutputChunk.forError(output.error()))
-                                .build());
-                    }
-                    return Flux.just(ServerSentEvent.<LlmClientOutputChunk>builder()
-                            .data(LlmClientOutputChunk.forError(LlmClientError.fromException(error)))
-                            .build());
-                });
+                .flatMapMany(provider::streamSse);
     }
 }
