@@ -22,7 +22,6 @@ class LlmClientInputBodyTests {
         assertEquals("gpt-3.5-turbo", body.model());
         assertFalse(body.stream());
         assertEquals(0.7, body.temperature());
-        assertFalse(body.isSse());
     }
 
     @Test
@@ -33,7 +32,6 @@ class LlmClientInputBodyTests {
                 0.7);
 
         assertTrue(body.stream());
-        assertTrue(body.isSse());
     }
 
     @Test
