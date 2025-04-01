@@ -9,7 +9,7 @@ import java.util.Map;
  * Contains the parameters for a chat completions request
  */
 public record LlmClientInputBody(String model, List<LlmClientMessage> messages,
-        boolean stream, Double temperature, boolean isSse) {
+        boolean stream, Double temperature) {
 
     /**
      * Creates a chat completion request body
@@ -22,7 +22,7 @@ public record LlmClientInputBody(String model, List<LlmClientMessage> messages,
      */
     public static LlmClientInputBody chat(String model, List<LlmClientMessage> messages,
             boolean stream, Double temperature) {
-        return new LlmClientInputBody(model, messages, stream, temperature, false);
+        return new LlmClientInputBody(model, messages, stream, temperature);
     }
 
     /**
@@ -35,7 +35,7 @@ public record LlmClientInputBody(String model, List<LlmClientMessage> messages,
      */
     public static LlmClientInputBody sse(String model, List<LlmClientMessage> messages,
             Double temperature) {
-        return new LlmClientInputBody(model, messages, true, temperature, true);
+        return new LlmClientInputBody(model, messages, true, temperature);
     }
 
     /**
@@ -50,8 +50,7 @@ public record LlmClientInputBody(String model, List<LlmClientMessage> messages,
                 null,
                 List.of(LlmClientMessage.user(content)),
                 stream,
-                null,
-                false);
+                null);
     }
 
     /**
