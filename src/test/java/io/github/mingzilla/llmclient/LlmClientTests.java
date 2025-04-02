@@ -50,7 +50,7 @@ class LlmClientTests {
                                 LlmClientInputBody.chat("gpt-3.5-turbo",
                                                 List.of(LlmClientMessage.user("Hello")),
                                                 false,
-                                                0.7),
+                                                0.7, Map.of()),
                                 Map.of("Authorization", "Bearer test-token"));
 
                 // Test the non-blocking send operation
@@ -80,7 +80,7 @@ class LlmClientTests {
                                 LlmClientInputBody.chat("gpt-3.5-turbo",
                                                 List.of(LlmClientMessage.user("Hello")),
                                                 true,
-                                                0.7),
+                                                0.7, Map.of()),
                                 Map.of("Authorization", "Bearer test-token"));
 
                 // Test the streaming operation
@@ -139,7 +139,7 @@ class LlmClientTests {
                 // Create test input
                 LlmClientInput input = LlmClientInput.chat(
                                 baseUrl,
-                                LlmClientInputBody.chatMessage("Hello", false),
+                                LlmClientInputBody.chatMessage("Hello", false, Map.of()),
                                 Map.of("Authorization", "Bearer test-token"));
 
                 // Test error handling

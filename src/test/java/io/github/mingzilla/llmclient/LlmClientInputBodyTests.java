@@ -17,7 +17,7 @@ class LlmClientInputBodyTests {
                 "gpt-3.5-turbo",
                 List.of(LlmClientMessage.user("Hello")),
                 false,
-                0.7);
+                0.7, Map.of());
 
         assertEquals("gpt-3.5-turbo", body.model());
         assertFalse(body.stream());
@@ -36,7 +36,7 @@ class LlmClientInputBodyTests {
 
     @Test
     void testToJsonObject() {
-        LlmClientInputBody body = LlmClientInputBody.chatMessage("Hello", false);
+        LlmClientInputBody body = LlmClientInputBody.chatMessage("Hello", false, Map.of());
         Map<String, Object> json = body.toJsonObject();
 
         assertNotNull(json.get("messages"));
