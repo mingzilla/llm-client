@@ -96,8 +96,7 @@ public class LlmClientJsonUtil {
             return null;
 
         try {
-            Map<String, Object> errorMap = fromJsonToStructure(errorBody, new TypeReference<Map<String, Object>>() {
-            });
+            Map<String, Object> errorMap = fromJsonToStructure(errorBody, new TypeReference<Map<String, Object>>() {});
             if (errorMap == null)
                 return null;
 
@@ -106,9 +105,7 @@ public class LlmClientJsonUtil {
                 return (String) code;
 
             Object error = errorMap.get("error"); // Try nested error object (OpenAI style)
-            if (error instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> errorObj = (Map<String, Object>) error;
+            if (error instanceof Map<?, ?> errorObj) {
                 code = errorObj.get("code");
                 if (code instanceof String)
                     return (String) code;
