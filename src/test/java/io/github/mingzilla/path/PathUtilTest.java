@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,8 +98,11 @@ class PathUtilTest {
     void setByPathShouldOverwriteExistingValues() {
         Map<String, Object> map = new HashMap<>();
         map.put("existing", "oldValue");
-        map.put("nested", Map.of("key", "oldNested"));
-        map.put("array", List.of(Map.of("value", "oldArrayValue")));
+        map.put("nested", new HashMap<>(Map.of("key", "oldNested")));
+        
+        List<Map<String, Object>> arrayList = new ArrayList<>();
+        arrayList.add(new HashMap<>(Map.of("value", "oldArrayValue")));
+        map.put("array", arrayList);
 
         PathUtil.setByPath(map, "existing", "newValue");
         PathUtil.setByPath(map, "nested.key", "newNested");
@@ -175,15 +179,14 @@ class PathUtilTest {
                 Map.of("name", "first", "value", 1),
                 Map.of("name", "second", "value", 2)
         ));
-
-        Map<String, Object> complexData = new HashMap<>();
-        complexData.put("data", List.of(Map.of(
-                "items", List.of(
-                        Map.of("id", "item1", "properties", Map.of("color", "red")),
-                        Map.of("id", "item2", "properties", Map.of("color", "blue"))
-                )
-        )));
-        map.put("complex", complexData);
+        map.put("complex", Map.of(
+                "data", List.of(Map.of(
+                        "items", List.of(
+                                Map.of("id", "item1", "properties", Map.of("color", "red")),
+                                Map.of("id", "item2", "properties", Map.of("color", "blue"))
+                        )
+                ))
+        ));
 
         return map;
     }

@@ -62,6 +62,11 @@ public class BeanOutputConverter<T> {
         this.schemaGenerator = new SchemaGenerator(config);
     }
 
+    /**
+     * Gets the format instructions for the LLM to generate JSON that matches the target type's schema
+     * 
+     * @return A string containing JSON schema and formatting instructions
+     */
     public String getFormatInstructions() {
         try {
             JsonNode schema = schemaGenerator.generateSchema(targetType);
@@ -77,6 +82,13 @@ public class BeanOutputConverter<T> {
         }
     }
 
+    /**
+     * Converts the input string to an instance of the target type
+     * 
+     * @param input The string input to convert, typically a JSON response from an LLM
+     * @return An instance of the target type
+     * @throws RuntimeException if the input is empty or cannot be converted
+     */
     public T convert(String input) {
         if (input == null || input.isBlank()) {
             throw new RuntimeException("Empty input cannot be converted");

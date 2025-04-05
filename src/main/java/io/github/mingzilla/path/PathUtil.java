@@ -49,13 +49,17 @@ public class PathUtil {
 
                     // Get the list/array by property name
                     if (!propertyName.isEmpty()) {
-                        if (!(current instanceof Map))
+                        if (!(current instanceof Map<?, ?>)) {
                             return null;
-                        current = ((Map<String, Object>) current).get(propertyName);
+                        }
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> currentMap = (Map<String, Object>) current;
+                        current = currentMap.get(propertyName);
                     }
 
                     // Access the index
                     if (current instanceof List) {
+                        @SuppressWarnings("unchecked")
                         List<Object> list = (List<Object>) current;
                         if (index >= 0 && index < list.size()) {
                             current = list.get(index);
@@ -67,11 +71,14 @@ public class PathUtil {
                     }
                 } else {
                     // Simple property access for both Map and List elements
-                    if (current instanceof Map) {
-                        current = ((Map<String, Object>) current).get(part);
+                    if (current instanceof Map<?, ?>) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> currentMap = (Map<String, Object>) current;
+                        current = currentMap.get(part);
                     } else if (current instanceof List) {
                         try {
                             int index = Integer.parseInt(part);
+                            @SuppressWarnings("unchecked")
                             List<Object> list = (List<Object>) current;
                             if (index >= 0 && index < list.size()) {
                                 current = list.get(index);
@@ -82,7 +89,9 @@ public class PathUtil {
                             // If not a number, treat as Map key
                             if (!(current instanceof Map))
                                 return null;
-                            current = ((Map<String, Object>) current).get(part);
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> currentMap = (Map<String, Object>) current;
+                            current = currentMap.get(part);
                         }
                     } else {
                         return null;
@@ -131,6 +140,7 @@ public class PathUtil {
                     if (!propertyName.isEmpty()) {
                         // Create List if it doesn't exist
                         current.putIfAbsent(propertyName, new ArrayList<>());
+                        @SuppressWarnings("unchecked")
                         List<Object> list = (List<Object>) current.get(propertyName);
 
                         // Fill list with empty items up to index
@@ -142,13 +152,8 @@ public class PathUtil {
                             list.set(index, value);
                         } else {
                             Object nextObj = list.get(index);
-                            Map<String, Object> nextMap;
-                            if (!(nextObj instanceof Map)) {
-                                nextMap = new HashMap<>();
-                                list.set(index, nextMap);
-                            } else {
-                                nextMap = (Map<String, Object>) nextObj;
-                            }
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> nextMap = (Map<String, Object>) nextObj;
                             current = nextMap;
                         }
                     }
@@ -158,11 +163,13 @@ public class PathUtil {
                     } else {
                         current.putIfAbsent(part, new HashMap<String, Object>());
                         Object next = current.get(part);
-                        if (!(next instanceof Map)) {
+                        if (!(next instanceof Map<?, ?>)) {
                             next = new HashMap<String, Object>();
                             current.put(part, next);
                         }
-                        current = (Map<String, Object>) next;
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> currentMap = (Map<String, Object>) next;
+                        current = currentMap;
                     }
                 }
             } catch (Exception e) {

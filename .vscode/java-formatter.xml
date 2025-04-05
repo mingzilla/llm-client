@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<profiles version="13">
+    <profile kind="CodeFormatterProfile" name="GoogleStyle">
+        <setting id="org.eclipse.jdt.core.formatter.keep_simple_if_on_one_line" value="true"/>
+        <setting id="org.eclipse.jdt.core.formatter.keep_then_statement_on_same_line" value="true"/>
+    </profile>
+</profiles>

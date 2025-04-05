@@ -28,10 +28,11 @@ public record LlmClientInputBody(String model, List<LlmClientMessage> messages,
     /**
      * Creates a chat completion request body
      * 
-     * @param model       Model identifier or null to use default
-     * @param messages    Array of message objects with role and content
-     * @param stream      Whether to stream the response
-     * @param temperature Temperature value (0-1) or null for default
+     * @param model            Model identifier or null to use default
+     * @param messages         Array of message objects with role and content
+     * @param stream          Whether to stream the response
+     * @param temperature     Temperature value (0-1) or null for default
+     * @param additionalFields Provider-specific fields to include in the request
      * @return The created input body
      */
     public static LlmClientInputBody chat(String model, List<LlmClientMessage> messages,
@@ -56,8 +57,9 @@ public record LlmClientInputBody(String model, List<LlmClientMessage> messages,
     /**
      * Creates a simple completion request with a single user message
      * 
-     * @param content The user message content
-     * @param stream  Whether to stream the response
+     * @param content          The user message content
+     * @param stream           Whether to stream the response
+     * @param additionalFields Provider-specific fields to include in the request
      * @return The created input body
      */
     public static LlmClientInputBody chatMessage(String content, boolean stream,
