@@ -33,18 +33,26 @@ sourceSets {
 }
 
 dependencies {
-    implementation 'org.springframework:spring-webflux:5.3.27'
-    implementation 'io.projectreactor.netty:reactor-netty-http:1.0.30'
+    implementation 'org.springframework:spring-webflux:5.3.23'
+    implementation 'io.projectreactor.netty:reactor-netty:1.0.24'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
-    implementation 'io.projectreactor:reactor-core:3.5.6'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.9.2'
-    testImplementation 'io.projectreactor:reactor-test:3.5.6'
-    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
-    
+    // Core dependencies
+    implementation 'io.projectreactor:reactor-core:3.5.10'
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
+
     // JSON Schema Generator
     implementation 'com.github.victools:jsonschema-generator:4.33.1'
+
+    // Testing
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.9.2'
+    testImplementation 'com.squareup.okhttp3:mockwebserver:4.10.0'
+    testImplementation 'io.projectreactor:reactor-test:3.5.10'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.6.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.6.0'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
 }
 
 tasks.withType(Javadoc) {
